@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Slacking Jar</h1>
+        <p class="text-muted mb-0">Track fines and keep accountability transparent.</p>
+    </div>
+    <a href="{{ url_for('main.create_jar_entry') }}" class="btn btn-danger">+ Add Fine</a>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Unpaid</p>
+                <h2 class="h4 mb-0 text-danger">${{ '%.2f'|format(overall_unpaid|float) }}</h2>
+            </div>
+        </div>
+    </div>
+    {% for user, total in unpaid_per_user %}
+    <div class="col-md-4 col-lg-2">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-muted small mb-1">{{ user.username|title }}</p>
+                <h3 class="h6 mb-0">${{ '%.2f'|format(total|float) }}</h3>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-4 col-md-3">
+        <select name="user" class="form-select" onchange="this.form.submit()">
+            <option value="">All users</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if user_filter == user.id %}selected{% endif %}>{{ user.username }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-sm-4 col-md-3">
+        <select name="paid" class="form-select" onchange="this.form.submit()">
+            <option value="all" {% if paid_filter == 'all' %}selected{% endif %}>All records</option>
+            <option value="unpaid" {% if paid_filter == 'unpaid' %}selected{% endif %}>Unpaid only</option>
+            <option value="paid" {% if paid_filter == 'paid' %}selected{% endif %}>Paid only</option>
+        </select>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Reason</th>
+                <th>Amount</th>
+                <th>Issued By</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td>{{ entry.target_user.username }}</td>
+                <td>{{ entry.reason }}</td>
+                <td>${{ '%.2f'|format(entry.amount|float) }}</td>
+                <td>{{ entry.issuer.username }}</td>
+                <td>{{ entry.date_issued.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    {% if entry.is_paid %}
+                        <span class="badge text-bg-success">Paid</span>
+                    {% else %}
+                        <span class="badge text-bg-danger">Unpaid</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="d-flex flex-wrap gap-1">
+                        <form method="post" action="{{ url_for('main.toggle_paid', entry_id=entry.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">Toggle</button>
+                        </form>
+                        <a href="{{ url_for('main.edit_jar_entry', entry_id=entry.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <form method="post" action="{{ url_for('main.delete_jar_entry', entry_id=entry.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm btn-outline-danger confirm-delete" type="submit">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center text-muted">No slacking jar records found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

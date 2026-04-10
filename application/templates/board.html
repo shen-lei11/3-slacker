@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">My Scrum Board</h1>
+        <p class="text-muted mb-0">Manage your tasks across To Do, In Progress, and Done.</p>
+    </div>
+    <a href="{{ url_for('main.create_task') }}" class="btn btn-primary">+ Create Task</a>
+</div>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-sm-4 col-md-3">
+        <select name="status" class="form-select" onchange="this.form.submit()">
+            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All statuses</option>
+            {% for status in statuses %}
+            <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>{{ status }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</form>
+
+<div class="row g-3">
+    {% for status in statuses %}
+    <div class="col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h2 class="h6 mb-0">{{ status }} <span class="badge text-bg-light">{{ grouped_tasks[status]|length }}</span></h2>
+            </div>
+            <div class="card-body board-column">
+                {% if grouped_tasks[status] %}
+                    {% for task in grouped_tasks[status] %}
+                    <div class="card mb-3 task-card priority-{{ task.priority|lower }}">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <h3 class="h6 mb-1">{{ task.title }}</h3>
+                                <span class="badge text-bg-secondary">{{ task.priority }}</span>
+                            </div>
+                            <p class="small text-muted mb-2">{{ task.description or 'No description' }}</p>
+                            <div class="small mb-2">
+                                {% if task.deadline %}
+                                    <span class="badge text-bg-info">Deadline: {{ task.deadline.strftime('%Y-%m-%d') }}</span>
+                                {% else %}
+                                    <span class="text-muted">No deadline</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                {% for target in statuses %}
+                                {% if target != task.status %}
+                                <form method="post" action="{{ url_for('main.change_task_status', task_id=task.id, new_status=target) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Move to {{ target }}</button>
+                                </form>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+
+                            <div class="d-flex gap-1">
+                                <a href="{{ url_for('main.edit_task', task_id=task.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <form method="post" action="{{ url_for('main.delete_task', task_id=task.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-sm btn-outline-danger confirm-delete" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted small mb-0">No tasks in this column.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

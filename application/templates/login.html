@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 75vh;">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h2 class="h4 text-center mb-3">Login</h2>
+                <p class="text-muted text-center small">Use one of the seeded trio accounts.</p>
+                <form method="post">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.username.label(class='form-label') }}
+                        {{ form.username(class='form-control', placeholder='Username') }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password.label(class='form-label') }}
+                        {{ form.password(class='form-control', placeholder='Password') }}
+                    </div>
+                    <div class="d-grid">
+                        {{ form.submit(class='btn btn-primary') }}
+                    </div>
+                </form>
+                <div class="alert alert-secondary small mt-3 mb-0">
+                    <strong>Seeded users:</strong> alex, blake, casey<br>
+                    <strong>Password:</strong> pass123
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

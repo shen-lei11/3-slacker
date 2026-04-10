@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="achievement-banner p-4 rounded-4 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h1 class="h3 text-white mb-1">Achievement Bulletin Board</h1>
+            <p class="text-white-50 mb-0">Celebrate wins and keep motivation high.</p>
+        </div>
+        <a href="{{ url_for('main.create_achievement') }}" class="btn btn-light">+ Post Achievement</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    {% for entry in entries %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm achievement-card">
+            <div class="card-body d-flex flex-column">
+                <h2 class="h6 mb-1">{{ entry.title }}</h2>
+                <p class="small text-muted mb-2">{{ entry.description or 'No details added.' }}</p>
+                <p class="small mb-1">By <strong>{{ entry.owner.username }}</strong></p>
+                <p class="small text-muted mb-3">Date: {{ entry.date_achieved.strftime('%Y-%m-%d') }}</p>
+                {% if entry.user_id == current_user.id %}
+                <div class="mt-auto d-flex gap-1">
+                    <a href="{{ url_for('main.edit_achievement', entry_id=entry.id) }}" class="btn btn-sm btn-outline-success">Edit</a>
+                    <form method="post" action="{{ url_for('main.delete_achievement', entry_id=entry.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-danger confirm-delete" type="submit">Delete</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-light border mb-0">No achievements yet. Post your first win.</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+body {
+    background: linear-gradient(180deg, #f7f8fc 0%, #eef2f7 100%);
+    min-height: 100vh;
+}
+
+.card {
+    border-radius: 0.75rem;
+}
+
+.quick-links .btn {
+    min-height: 44px;
+}
+
+.board-column {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.task-card {
+    border-left: 4px solid #adb5bd;
+}
+
+.task-card.priority-low {
+    border-left-color: #198754;
+}
+
+.task-card.priority-medium {
+    border-left-color: #fd7e14;
+}
+
+.task-card.priority-high {
+    border-left-color: #dc3545;
+}
+
+.achievement-banner {
+    background: linear-gradient(120deg, #198754, #20c997);
+}
+
+.achievement-card {
+    border-top: 4px solid #198754;
+}

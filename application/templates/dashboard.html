@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Team Dashboard</h1>
+        <p class="text-muted mb-0">Shared accountability snapshot for the trio.</p>
+    </div>
+    <span class="badge text-bg-danger fs-6">Unpaid Slacking Fines: ${{ '%.2f'|format(overall_unpaid|float) }}</span>
+</div>
+
+<div class="row g-3 mb-4 quick-links">
+    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-light w-100 border" href="{{ url_for('main.board') }}">My Board</a></div>
+    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-light w-100 border" href="{{ url_for('main.tracker') }}">Tracker</a></div>
+    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-light w-100 border" href="{{ url_for('main.backlog') }}">Backlog</a></div>
+    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-light w-100 border" href="{{ url_for('main.achievements') }}">Achievements</a></div>
+    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-light w-100 border" href="{{ url_for('main.jar') }}">Slacking Jar</a></div>
+    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-primary w-100" href="{{ url_for('main.create_task') }}">+ New Task</a></div>
+</div>
+
+<div class="row g-3 mb-4">
+    {% for summary in summaries %}
+    <div class="col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <h2 class="h5 mb-3">{{ summary.user.username|title }}</h2>
+                <div class="d-flex gap-2 flex-wrap mb-3">
+                    <span class="badge text-bg-secondary">To Do: {{ summary.counts['To Do'] }}</span>
+                    <span class="badge text-bg-warning">In Progress: {{ summary.counts['In Progress'] }}</span>
+                    <span class="badge text-bg-success">Done: {{ summary.counts['Done'] }}</span>
+                </div>
+                {% if summary.latest_focus %}
+                    <p class="mb-1"><strong>Current Work:</strong> {{ summary.latest_focus.title }}</p>
+                    <p class="small text-muted mb-2">{{ summary.latest_focus.status_note or 'No status note' }}</p>
+                    <p class="small text-muted mb-2">Updated {{ summary.latest_focus.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                {% else %}
+                    <p class="text-muted small">No current focus update yet.</p>
+                {% endif %}
+                <p class="mb-0"><strong>Unpaid fines:</strong> ${{ '%.2f'|format(summary.unpaid_total|float) }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0">Latest Achievements</h2>
+            <a href="{{ url_for('main.achievements') }}" class="btn btn-sm btn-outline-success">View All</a>
+        </div>
+        {% if latest_achievements %}
+            <div class="list-group list-group-flush">
+                {% for item in latest_achievements %}
+                <div class="list-group-item px-0">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ item.title }}</strong>
+                        <span class="small text-muted">{{ item.date_achieved.strftime('%Y-%m-%d') }}</span>
+                    </div>
+                    <div class="small text-muted">By {{ item.owner.username }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No achievements posted yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
