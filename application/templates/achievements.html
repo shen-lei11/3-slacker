@@ -1,41 +1,58 @@
 {% extends 'base.html' %}
-
+{% block title %}Achievements - Trio Accountability Hub{% endblock %}
+{% block header %}
+<header class="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-10 px-8 py-5 flex justify-between items-center">
+    <div><h1 class="text-2xl font-serif text-gray-900">Achievement Board</h1></div>
+    <form method="get" class="flex items-center gap-2">
+        <select name="user" class="bg-surface-100 border border-gray-200 text-gray-700 py-2 pl-4 pr-10 rounded-xl text-sm">
+            <option value="all" {% if people_filter == 'all' %}selected{% endif %}>All People</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if people_filter == (user.id|string) %}selected{% endif %}>{{ user.name }}</option>
+            {% endfor %}
+        </select>
+        <button class="px-4 py-2 rounded-xl bg-brand-500 text-white text-sm">Filter</button>
+    </form>
+</header>
+{% endblock %}
 {% block content %}
-<div class="achievement-banner p-4 rounded-4 mb-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div>
-            <h1 class="h3 text-white mb-1">Achievement Bulletin Board</h1>
-            <p class="text-white-50 mb-0">Celebrate wins and keep motivation high.</p>
-        </div>
-        <a href="{{ url_for('main.create_achievement') }}" class="btn btn-light">+ Post Achievement</a>
-    </div>
-</div>
+<section class="panel p-6">
+    <h2 class="text-lg font-bold mb-4">Create Achievement</h2>
+    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {{ form.hidden_tag() }}
+        {{ form.title(class='rounded-lg border border-gray-200 px-3 py-2 bg-white', placeholder='Achievement title') }}
+        {{ form.user_id(class='rounded-lg border border-gray-200 px-3 py-2 bg-white') }}
+        {{ form.date_achieved(class='rounded-lg border border-gray-200 px-3 py-2 bg-white') }}
+        <button class="bg-brand-500 text-white rounded-lg px-4 py-2">Post Achievement</button>
+        {{ form.description(class='rounded-lg border border-gray-200 px-3 py-2 bg-white md:col-span-2', placeholder='Description') }}
+    </form>
+</section>
 
-<div class="row g-3">
-    {% for entry in entries %}
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm achievement-card">
-            <div class="card-body d-flex flex-column">
-                <h2 class="h6 mb-1">{{ entry.title }}</h2>
-                <p class="small text-muted mb-2">{{ entry.description or 'No details added.' }}</p>
-                <p class="small mb-1">By <strong>{{ entry.owner.username }}</strong></p>
-                <p class="small text-muted mb-3">Date: {{ entry.date_achieved.strftime('%Y-%m-%d') }}</p>
-                {% if entry.user_id == current_user.id %}
-                <div class="mt-auto d-flex gap-1">
-                    <a href="{{ url_for('main.edit_achievement', entry_id=entry.id) }}" class="btn btn-sm btn-outline-success">Edit</a>
-                    <form method="post" action="{{ url_for('main.delete_achievement', entry_id=entry.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button class="btn btn-sm btn-outline-danger confirm-delete" type="submit">Delete</button>
+<div class="space-y-4">
+    {% for item in achievements %}
+    <article class="panel p-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-sm text-gray-500">{{ item.user.name }} • {{ item.date_achieved }}</p>
+                <h3 class="text-xl font-serif text-gray-900">{{ item.title }}</h3>
+                <p class="text-sm text-gray-600 mt-2">{{ item.description or 'No description.' }}</p>
+                <details class="mt-2">
+                    <summary class="text-xs text-brand-600 cursor-pointer">Edit</summary>
+                    <form method="post" action="{{ url_for('main.update_achievement', achievement_id=item.id) }}" class="mt-2 grid gap-2">
+                        <input type="text" name="title" value="{{ item.title }}" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white">
+                        <input type="date" name="date_achieved" value="{{ item.date_achieved }}" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white">
+                        <textarea name="description" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white">{{ item.description or '' }}</textarea>
+                        <button class="text-xs bg-brand-500 text-white rounded px-2 py-1 w-fit">Save</button>
                     </form>
-                </div>
-                {% endif %}
+                </details>
             </div>
+            <form method="post" action="{{ url_for('main.delete_achievement', achievement_id=item.id) }}">
+                {{ form.csrf_token }}
+                <button class="text-gray-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+            </form>
         </div>
-    </div>
+    </article>
     {% else %}
-    <div class="col-12">
-        <div class="alert alert-light border mb-0">No achievements yet. Post your first win.</div>
-    </div>
+    <div class="panel p-6 text-gray-500">No achievements posted yet.</div>
     {% endfor %}
 </div>
 {% endblock %}

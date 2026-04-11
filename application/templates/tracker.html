@@ -1,61 +1,57 @@
 {% extends 'base.html' %}
-
+{% block title %}Tracker - Trio Accountability Hub{% endblock %}
+{% block header %}
+<header class="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-10 px-8 py-5 flex justify-between items-center">
+    <div><h1 class="text-2xl font-serif text-gray-900">Current Work Tracker</h1></div>
+</header>
+{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="h3 mb-1">Current Work Tracker</h1>
-        <p class="text-muted mb-0">Share what each of you is currently focused on.</p>
-    </div>
-</div>
+<section class="panel p-6">
+    <h2 class="text-lg font-bold mb-4">Add Focus Item</h2>
+    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {{ form.hidden_tag() }}
+        {{ form.user_id(class='rounded-lg border border-gray-200 px-3 py-2 bg-white') }}
+        {{ form.target_date(class='rounded-lg border border-gray-200 px-3 py-2 bg-white') }}
+        {{ form.title(class='rounded-lg border border-gray-200 px-3 py-2 bg-white md:col-span-2', placeholder='Focus title') }}
+        {{ form.status_note(class='rounded-lg border border-gray-200 px-3 py-2 bg-white', placeholder='Status note') }}
+        {{ form.description(class='rounded-lg border border-gray-200 px-3 py-2 bg-white md:col-span-2', placeholder='Description') }}
+        <button class="bg-brand-500 text-white rounded-lg py-2 px-4 w-fit">Save Focus</button>
+    </form>
+</section>
 
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-body">
-        <h2 class="h5 mb-3">{{ 'Update' if existing else 'Create' }} My Focus</h2>
-        <form method="post" action="{{ url_for('main.save_tracker_entry') }}">
-            {{ form.hidden_tag() }}
-            <div class="row g-3">
-                <div class="col-md-6">
-                    {{ form.title.label(class='form-label') }}
-                    {{ form.title(class='form-control') }}
-                </div>
-                <div class="col-md-6">
-                    {{ form.status_note.label(class='form-label') }}
-                    {{ form.status_note(class='form-control') }}
-                </div>
-                <div class="col-12">
-                    {{ form.description.label(class='form-label') }}
-                    {{ form.description(class='form-control', rows='3') }}
-                </div>
-                <div class="col-md-4">
-                    {{ form.target_date.label(class='form-label') }}
-                    {{ form.target_date(class='form-control', type='date') }}
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    {{ form.submit(class='btn btn-primary') }}
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="row g-3">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     {% for user in users %}
-    {% set entry = latest_entries[user.id] %}
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-body">
-                <h3 class="h6 mb-2">{{ user.username|title }}</h3>
-                {% if entry %}
-                    <p class="mb-1"><strong>{{ entry.title }}</strong></p>
-                    <p class="small text-muted mb-1">{{ entry.description or 'No details provided.' }}</p>
-                    <p class="small mb-1"><span class="badge text-bg-info">{{ entry.status_note or 'No status note' }}</span></p>
-                    <p class="small text-muted mb-0">Updated: {{ entry.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                {% else %}
-                    <p class="small text-muted mb-0">No current focus posted yet.</p>
-                {% endif %}
-            </div>
+    <section class="panel p-5">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center font-semibold">{{ user.name[:1] }}</div>
+            <div><h3 class="font-semibold text-gray-900">{{ user.name }}</h3></div>
         </div>
-    </div>
+        <div class="space-y-3">
+            {% for item in by_user[user.id] %}
+            <div class="bg-surface-100 rounded-xl p-3 border border-gray-200">
+                <p class="font-medium text-gray-900">{{ item.title }}</p>
+                <p class="text-xs text-gray-500">{{ item.status_note or 'No status note' }}</p>
+                <p class="text-xs text-gray-500">Target: {{ item.target_date or '-' }} • Updated {{ item.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <details class="mt-2">
+                    <summary class="text-xs text-brand-600 cursor-pointer">Edit</summary>
+                    <form method="post" action="{{ url_for('main.update_focus', focus_id=item.id) }}" class="mt-2 grid gap-2">
+                        <input type="text" name="title" value="{{ item.title }}" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white">
+                        <input type="text" name="status_note" value="{{ item.status_note or '' }}" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white">
+                        <input type="date" name="target_date" value="{{ item.target_date }}" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white">
+                        <textarea name="description" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white">{{ item.description or '' }}</textarea>
+                        <button class="text-xs bg-brand-500 text-white rounded px-2 py-1">Save</button>
+                    </form>
+                </details>
+                <form method="post" action="{{ url_for('main.delete_focus', focus_id=item.id) }}" class="mt-2">
+                    {{ form.csrf_token }}
+                    <button class="text-xs text-red-600">Delete</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500">No focus item yet.</p>
+            {% endfor %}
+        </div>
+    </section>
     {% endfor %}
 </div>
 {% endblock %}

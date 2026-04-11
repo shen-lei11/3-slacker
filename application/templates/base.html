@@ -1,54 +1,105 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Trio Accountability Hub</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Trio Accountability Hub{% endblock %}</title>
+    <script>
+        window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+        tailwind = {
+            config: {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['Inter', 'sans-serif'],
+                            serif: ['Playfair Display', 'serif'],
+                        },
+                        colors: {
+                            brand: {
+                                50: '#fff8f1',
+                                100: '#ffeedb',
+                                200: '#ffd6b0',
+                                300: '#ffb97d',
+                                400: '#ff9243',
+                                500: '#fb7114',
+                                600: '#eb5809',
+                                700: '#c34109',
+                                800: '#9b3410',
+                                900: '#7d2e10',
+                            },
+                            surface: {
+                                100: '#f9fafb',
+                                200: '#f3f4f6',
+                                300: '#e5e7eb',
+                            },
+                        },
+                        boxShadow: {
+                            card: '0 4px 20px rgba(0, 0, 0, 0.03)',
+                            'soft-xl': '0 20px 50px rgba(251, 113, 20, 0.08)',
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="{{ url_for('main.dashboard') }}">Trio Accountability Hub</a>
-        {% if current_user.is_authenticated %}
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="mainNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('main.board') }}">My Board</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('main.tracker') }}">Tracker</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('main.backlog') }}">Backlog</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('main.achievements') }}">Achievements</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('main.jar') }}">Slacking Jar</a></li>
-            </ul>
-            <div class="d-flex align-items-center gap-3 text-white">
-                <span class="small text-light">Signed in as <strong>{{ current_user.username }}</strong></span>
-                <a class="btn btn-outline-light btn-sm" href="{{ url_for('auth.logout') }}">Logout</a>
+<body class="min-h-screen font-sans text-gray-800 antialiased relative {% block body_class %}flex m-0 p-0{% endblock %}">
+    <div class="mesh-bg"></div>
+
+    {% block layout %}
+    <aside class="w-64 bg-white border-r border-gray-100 flex-shrink-0 hidden md:flex flex-col h-screen sticky top-0 z-20 shadow-sm">
+        <div class="p-6 flex items-center gap-3 border-b border-gray-50">
+            <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white shadow-[0_4px_12px_rgba(251,113,20,0.3)]">
+                <i class="fa-solid fa-bolt text-sm"></i>
+            </div>
+            <span class="font-bold text-xl tracking-tight text-gray-900">SquadSync</span>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+            <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if active == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-chart-pie w-5 text-center"></i>Dashboard</a>
+            <a href="{{ url_for('main.board') }}" class="nav-link {% if active == 'board' %}active{% endif %}"><i class="fa-solid fa-columns w-5 text-center"></i>My Board</a>
+            <a href="{{ url_for('main.tracker') }}" class="nav-link {% if active == 'tracker' %}active{% endif %}"><i class="fa-solid fa-crosshairs w-5 text-center"></i>Tracker</a>
+            <a href="{{ url_for('main.backlog') }}" class="nav-link {% if active == 'backlog' %}active{% endif %}"><i class="fa-solid fa-list-ul w-5 text-center"></i>Backlog</a>
+            <a href="{{ url_for('main.achievements') }}" class="nav-link {% if active == 'achievements' %}active{% endif %}"><i class="fa-solid fa-trophy w-5 text-center"></i>Achievements</a>
+            <a href="{{ url_for('main.jar') }}" class="nav-link {% if active == 'jar' %}active{% endif %}"><i class="fa-solid fa-jar w-5 text-center"></i>Slacking Jar</a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-50">
+            <div class="flex items-center gap-3 px-4 py-3">
+                <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-semibold">{{ current_user.name[:1] }}</div>
+                <div>
+                    <p class="text-sm font-medium text-gray-900">{{ current_user.name }}</p>
+                    <form action="{{ url_for('auth.logout') }}" method="post">
+                        <button class="text-xs text-gray-500 hover:text-brand-600">Logout</button>
+                    </form>
+                </div>
             </div>
         </div>
-        {% endif %}
-    </div>
-</nav>
+    </aside>
 
-<main class="container my-4 pb-4">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+        {% block header %}{% endblock %}
+        <div class="p-8 max-w-7xl mx-auto w-full space-y-6">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="space-y-2">
+                        {% for category, message in messages %}
+                        <div class="rounded-xl px-4 py-3 text-sm border {% if category == 'success' %}bg-green-50 border-green-200 text-green-800{% elif category == 'danger' %}bg-red-50 border-red-200 text-red-700{% elif category == 'warning' %}bg-amber-50 border-amber-200 text-amber-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    {% endblock %}
 
-    {% block content %}{% endblock %}
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

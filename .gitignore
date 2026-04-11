@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+trio_hub.db
+.env
+reference design/

@@ -1,69 +1,111 @@
 {% extends 'base.html' %}
-
-{% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+{% block title %}Dashboard - Trio Accountability Hub{% endblock %}
+{% block header %}
+<header class="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-10 px-8 py-5 flex justify-between items-center">
     <div>
-        <h1 class="h3 mb-1">Team Dashboard</h1>
-        <p class="text-muted mb-0">Shared accountability snapshot for the trio.</p>
+        <h1 class="text-2xl font-serif text-gray-900">Dashboard Overview</h1>
+        <p class="text-sm text-gray-500 mt-1">Trio Accountability Hub</p>
     </div>
-    <span class="badge text-bg-danger fs-6">Unpaid Slacking Fines: ${{ '%.2f'|format(overall_unpaid|float) }}</span>
-</div>
+    <div class="flex items-center gap-2 bg-surface-100 p-1.5 rounded-xl border border-gray-100">
+        <a href="{{ url_for('main.jar') }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg shadow-sm hover:text-brand-600"><i class="fa-solid fa-gavel text-brand-500"></i> Add Fine</a>
+        <a href="{{ url_for('main.board') }}" class="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg shadow-[0_4px_12px_rgba(251,113,20,0.25)] hover:bg-brand-600"><i class="fa-solid fa-plus"></i> New Task</a>
+    </div>
+</header>
+{% endblock %}
+{% block content %}
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="kpi-card"><h3 class="text-gray-500 text-sm font-medium">Total Unpaid Fines</h3><p class="text-3xl font-bold text-gray-900 mt-2">${{ '%.2f'|format(total_unpaid) }}</p></div>
+    <div class="kpi-card"><h3 class="text-gray-500 text-sm font-medium">Unpaid Entries Count</h3><p class="text-3xl font-bold text-gray-900 mt-2">{{ unpaid_fines|length }}</p></div>
+    <div class="kpi-card"><h3 class="text-gray-500 text-sm font-medium">Total Collected</h3><p class="text-3xl font-bold text-gray-900 mt-2">${{ '%.2f'|format(total_collected) }}</p></div>
+    <div class="kpi-card"><h3 class="text-gray-500 text-sm font-medium">Top Offender</h3><p class="text-2xl font-bold text-gray-900 mt-2">{{ top_offender.name if top_offender else 'N/A' }}</p><p class="text-sm text-brand-600">${{ '%.2f'|format(top_offender.amount) if top_offender else '0.00' }}</p></div>
+</section>
 
-<div class="row g-3 mb-4 quick-links">
-    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-light w-100 border" href="{{ url_for('main.board') }}">My Board</a></div>
-    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-light w-100 border" href="{{ url_for('main.tracker') }}">Tracker</a></div>
-    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-light w-100 border" href="{{ url_for('main.backlog') }}">Backlog</a></div>
-    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-light w-100 border" href="{{ url_for('main.achievements') }}">Achievements</a></div>
-    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-light w-100 border" href="{{ url_for('main.jar') }}">Slacking Jar</a></div>
-    <div class="col-6 col-md-4 col-lg-2"><a class="btn btn-primary w-100" href="{{ url_for('main.create_task') }}">+ New Task</a></div>
-</div>
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="panel p-5">
+        <p class="text-sm text-gray-500">To Do Tasks</p>
+        <p class="text-3xl font-bold text-gray-900">{{ task_counts.todo }}</p>
+    </div>
+    <div class="panel p-5">
+        <p class="text-sm text-gray-500">In Progress Tasks</p>
+        <p class="text-3xl font-bold text-gray-900">{{ task_counts.doing }}</p>
+    </div>
+    <div class="panel p-5">
+        <p class="text-sm text-gray-500">Done Tasks</p>
+        <p class="text-3xl font-bold text-gray-900">{{ task_counts.done }}</p>
+    </div>
+</section>
 
-<div class="row g-3 mb-4">
-    {% for summary in summaries %}
-    <div class="col-lg-4">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-body">
-                <h2 class="h5 mb-3">{{ summary.user.username|title }}</h2>
-                <div class="d-flex gap-2 flex-wrap mb-3">
-                    <span class="badge text-bg-secondary">To Do: {{ summary.counts['To Do'] }}</span>
-                    <span class="badge text-bg-warning">In Progress: {{ summary.counts['In Progress'] }}</span>
-                    <span class="badge text-bg-success">Done: {{ summary.counts['Done'] }}</span>
+<section class="panel p-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-gray-900">Current Work Summary</h2>
+        <a href="{{ url_for('main.tracker') }}" class="text-sm text-brand-600">Manage Tracker</a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% for user in users %}
+        {% set current_focus = focus_by_user.get(user.id) %}
+        <article class="rounded-xl border border-gray-200 bg-white p-4">
+            <p class="text-sm font-semibold text-gray-900 mb-1">{{ user.name }}</p>
+            {% if current_focus %}
+            <p class="text-sm text-gray-800">{{ current_focus.title }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ current_focus.status_note or 'No status note' }}</p>
+            <p class="text-xs text-gray-500">Target: {{ current_focus.target_date or '-' }} | Updated {{ current_focus.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            {% else %}
+            <p class="text-sm text-gray-500">No current focus set.</p>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <section class="lg:col-span-2 panel p-8">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-900">Today's Focus</h2>
+            <a href="{{ url_for('main.tracker') }}" class="text-sm font-medium text-brand-600">View Tracker</a>
+        </div>
+        <div class="space-y-3">
+            {% for item in focus_items[:5] %}
+            <div class="flex items-start gap-4 p-4 rounded-xl border border-gray-100 hover:border-brand-200 bg-white">
+                <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center"><i class="fa-solid fa-crosshairs"></i></div>
+                <div class="flex-1">
+                    <h4 class="font-semibold text-gray-900">{{ item.title }}</h4>
+                    <p class="text-sm text-gray-500">{{ item.user.name }}{% if item.status_note %} • {{ item.status_note }}{% endif %}</p>
                 </div>
-                {% if summary.latest_focus %}
-                    <p class="mb-1"><strong>Current Work:</strong> {{ summary.latest_focus.title }}</p>
-                    <p class="small text-muted mb-2">{{ summary.latest_focus.status_note or 'No status note' }}</p>
-                    <p class="small text-muted mb-2">Updated {{ summary.latest_focus.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                {% else %}
-                    <p class="text-muted small">No current focus update yet.</p>
-                {% endif %}
-                <p class="mb-0"><strong>Unpaid fines:</strong> ${{ '%.2f'|format(summary.unpaid_total|float) }}</p>
+                <div class="text-xs text-gray-500">{{ item.target_date or '-' }}</div>
             </div>
+            {% else %}
+            <p class="text-gray-500">No active focus items yet.</p>
+            {% endfor %}
         </div>
-    </div>
-    {% endfor %}
-</div>
+    </section>
 
-<div class="card shadow-sm border-0">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h5 mb-0">Latest Achievements</h2>
-            <a href="{{ url_for('main.achievements') }}" class="btn btn-sm btn-outline-success">View All</a>
-        </div>
-        {% if latest_achievements %}
-            <div class="list-group list-group-flush">
-                {% for item in latest_achievements %}
-                <div class="list-group-item px-0">
-                    <div class="d-flex justify-content-between">
-                        <strong>{{ item.title }}</strong>
-                        <span class="small text-muted">{{ item.date_achieved.strftime('%Y-%m-%d') }}</span>
-                    </div>
-                    <div class="small text-muted">By {{ item.owner.username }}</div>
+    <section class="space-y-6">
+        <div class="panel p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Recent Tasks</h3>
+            <div class="space-y-3">
+                {% for task in tasks %}
+                <div class="p-3 rounded-lg bg-surface-100 border border-gray-200">
+                    <p class="font-medium text-gray-900">{{ task.title }}</p>
+                    <p class="text-xs text-gray-500">{{ task.user.name }} • {{ task.status|title }}</p>
                 </div>
+                {% else %}
+                <p class="text-gray-500 text-sm">No tasks yet.</p>
                 {% endfor %}
             </div>
-        {% else %}
-            <p class="text-muted mb-0">No achievements posted yet.</p>
-        {% endif %}
-    </div>
+        </div>
+        <div class="panel p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Latest Achievements</h3>
+            <div class="space-y-3">
+                {% for achievement in achievements %}
+                <div>
+                    <p class="font-medium text-gray-900">{{ achievement.title }}</p>
+                    <p class="text-xs text-gray-500">{{ achievement.user.name }} • {{ achievement.date_achieved }}</p>
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-sm">No achievements yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
 </div>
 {% endblock %}

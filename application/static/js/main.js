@@ -1,12 +1,19 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const deleteButtons = document.querySelectorAll(".confirm-delete");
+function triggerCoinDrop() {
+  const area = document.getElementById('jar-drop-zone');
+  if (!area) return;
+  const coin = document.createElement('div');
+  coin.className = 'coin animating-coin';
+  coin.textContent = '$1';
+  coin.style.left = '50%';
+  coin.style.top = '-10px';
+  coin.style.transform = 'translateX(-50%)';
+  area.appendChild(coin);
+  setTimeout(() => coin.remove(), 1600);
+}
 
-    deleteButtons.forEach(function (button) {
-        button.addEventListener("click", function (event) {
-            const ok = window.confirm("Are you sure you want to delete this item?");
-            if (!ok) {
-                event.preventDefault();
-            }
-        });
-    });
+document.addEventListener('DOMContentLoaded', () => {
+  const autoDrop = document.getElementById('auto-coin-drop');
+  if (autoDrop) {
+    triggerCoinDrop();
+  }
 });

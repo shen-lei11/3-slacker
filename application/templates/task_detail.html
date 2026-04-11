@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Task Detail - Trio Accountability Hub{% endblock %}
+{% block header %}
+<header class="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-10 px-8 py-5 flex justify-between items-center">
+    <div><h1 class="text-2xl font-serif text-gray-900">Task Detail</h1></div>
+</header>
+{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto panel p-8">
+    <div class="flex justify-between items-start">
+        <div>
+            <p class="text-sm text-gray-500">{{ task.user.name }} • {{ task.status|title }} • {{ task.priority|title }}</p>
+            <h2 class="text-3xl font-serif text-gray-900">{{ task.title }}</h2>
+            <p class="text-gray-600 mt-4">{{ task.description or 'No description.' }}</p>
+            <p class="text-sm text-gray-500 mt-4">Deadline: {{ task.deadline or 'Not set' }}</p>
+        </div>
+        <a href="{{ url_for('main.board') }}" class="text-brand-600 text-sm">Back to Board</a>
+    </div>
+</div>
+{% endblock %}
