@@ -1,58 +1,178 @@
 {% extends 'base.html' %}
 {% block title %}Achievements - Trio Accountability Hub{% endblock %}
 {% block header %}
-<header class="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-10 px-8 py-5 flex justify-between items-center">
-    <div><h1 class="text-2xl font-serif text-gray-900">Achievement Board</h1></div>
-    <form method="get" class="flex items-center gap-2">
-        <select name="user" class="bg-surface-100 border border-gray-200 text-gray-700 py-2 pl-4 pr-10 rounded-xl text-sm">
-            <option value="all" {% if people_filter == 'all' %}selected{% endif %}>All People</option>
-            {% for user in users %}
-            <option value="{{ user.id }}" {% if people_filter == (user.id|string) %}selected{% endif %}>{{ user.name }}</option>
-            {% endfor %}
-        </select>
-        <button class="px-4 py-2 rounded-xl bg-brand-500 text-white text-sm">Filter</button>
-    </form>
+<header class="bg-white border-b border-gray-100 sticky top-0 z-10 px-8 py-4">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+            <p class="text-xs text-gray-500">SquadSync Projects / Wins</p>
+            <h1 class="text-4xl font-serif text-gray-900">Achievement Board</h1>
+        </div>
+        <form method="get" action="{{ url_for('main.achievements') }}" class="flex items-center gap-2">
+            <input type="hidden" name="user" value="{{ people_filter }}">
+            <input type="hidden" name="month" value="{{ month_filter }}">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search achievements..." class="w-64 h-10 rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ffd6b0]">
+            </div>
+            <button type="button" class="h-10 w-10 rounded-lg border border-gray-200 text-gray-400 bg-white">
+                <i class="fa-regular fa-bell"></i>
+            </button>
+        </form>
 </header>
 {% endblock %}
 {% block content %}
-<section class="panel p-6">
-    <h2 class="text-lg font-bold mb-4">Create Achievement</h2>
-    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {{ form.hidden_tag() }}
-        {{ form.title(class='rounded-lg border border-gray-200 px-3 py-2 bg-white', placeholder='Achievement title') }}
-        {{ form.user_id(class='rounded-lg border border-gray-200 px-3 py-2 bg-white') }}
-        {{ form.date_achieved(class='rounded-lg border border-gray-200 px-3 py-2 bg-white') }}
-        <button class="bg-brand-500 text-white rounded-lg px-4 py-2">Post Achievement</button>
-        {{ form.description(class='rounded-lg border border-gray-200 px-3 py-2 bg-white md:col-span-2', placeholder='Description') }}
-    </form>
-</section>
-
-<div class="space-y-4">
-    {% for item in achievements %}
-    <article class="panel p-6">
-        <div class="flex justify-between items-start">
+<section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <article class="panel p-6 bg-[radial-gradient(circle_at_2px_2px,#ffe2c8_1px,transparent_0)] [background-size:18px_18px]">
+        <div class="flex items-start justify-between">
             <div>
-                <p class="text-sm text-gray-500">{{ item.user.name }} • {{ item.date_achieved }}</p>
-                <h3 class="text-xl font-serif text-gray-900">{{ item.title }}</h3>
-                <p class="text-sm text-gray-600 mt-2">{{ item.description or 'No description.' }}</p>
-                <details class="mt-2">
-                    <summary class="text-xs text-brand-600 cursor-pointer">Edit</summary>
-                    <form method="post" action="{{ url_for('main.update_achievement', achievement_id=item.id) }}" class="mt-2 grid gap-2">
-                        <input type="text" name="title" value="{{ item.title }}" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white">
-                        <input type="date" name="date_achieved" value="{{ item.date_achieved }}" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white">
-                        <textarea name="description" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white">{{ item.description or '' }}</textarea>
-                        <button class="text-xs bg-brand-500 text-white rounded px-2 py-1 w-fit">Save</button>
-                    </form>
-                </details>
+                <p class="text-sm text-gray-500">Total Wins This Month</p>
+                <p class="text-5xl font-bold text-gray-900 mt-2">{{ wins_this_month }}</p>
+                <p class="text-xs text-gray-500 mt-2">
+                    <span class="text-emerald-600 font-semibold">↗ {{ wins_change_pct }}%</span> vs last month
+                </p>
             </div>
-            <form method="post" action="{{ url_for('main.delete_achievement', achievement_id=item.id) }}">
-                {{ form.csrf_token }}
-                <button class="text-gray-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
-            </form>
+            <span class="w-10 h-10 rounded-xl bg-[#fff1e8] text-[#fb7114] flex items-center justify-center"><i class="fa-solid fa-trophy"></i></span>
         </div>
     </article>
-    {% else %}
-    <div class="panel p-6 text-gray-500">No achievements posted yet.</div>
-    {% endfor %}
+
+    <article class="panel p-6">
+        <div class="flex items-start justify-between">
+            <div>
+                <p class="text-sm text-gray-500">Current Longest Streak</p>
+                <p class="text-5xl font-bold text-gray-900 mt-2">{{ current_longest_streak }}</p>
+                <p class="text-xs text-gray-500 mt-2">Held by {{ longest_streak_holder }}</p>
+            </div>
+            <span class="w-10 h-10 rounded-xl bg-[#fff8e9] text-[#f59e0b] flex items-center justify-center"><i class="fa-solid fa-fire"></i></span>
+        </div>
+    </article>
+
+    <article class="rounded-2xl p-6 text-white" style="background:#fb7114;">
+        <h2 class="text-2xl font-bold">Celebrate a Win!</h2>
+        <p class="text-sm mt-2 text-white/90">Did someone crush a goal? Give them a shout-out.</p>
+        <a href="{{ url_for('main.new_achievement') }}" class="mt-6 w-full h-11 rounded-xl bg-white text-[#fb7114] font-semibold text-sm flex items-center justify-center gap-1">
+            <i class="fa-solid fa-plus"></i>
+            Add Achievement
+        </a>
+    </article>
+</section>
+
+<section class="panel p-4">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-1 bg-gray-50 rounded-full border border-gray-200 px-1 py-1">
+            <span class="px-4 h-8 rounded-full text-xs font-semibold bg-[#fff1e8] text-[#fb7114] flex items-center">All Activity</span>
+            <span class="px-4 h-8 rounded-full text-xs font-semibold text-gray-500 flex items-center">Milestones</span>
+            <span class="px-4 h-8 rounded-full text-xs font-semibold text-gray-500 flex items-center">Streaks</span>
+            <span class="px-4 h-8 rounded-full text-xs font-semibold text-gray-500 flex items-center">Shout-outs</span>
+        </div>
+
+        <form method="get" action="{{ url_for('main.achievements') }}" class="flex items-center gap-2">
+            <input type="hidden" name="q" value="{{ search_query }}">
+            <select name="user" class="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700">
+                <option value="all" {% if people_filter == 'all' %}selected{% endif %}>All People</option>
+                {% for user in users %}
+                <option value="{{ user.id }}" {% if people_filter == (user.id|string) %}selected{% endif %}>{{ user.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="month" class="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700">
+                <option value="this" {% if month_filter == 'this' %}selected{% endif %}>This Month</option>
+                <option value="all" {% if month_filter == 'all' %}selected{% endif %}>All Time</option>
+            </select>
+            <button class="h-10 px-4 rounded-lg bg-gray-900 text-white text-sm">Apply</button>
+        </form>
+    </div>
+</section>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+    <div class="lg:col-span-2 space-y-4">
+        {% for item in achievements %}
+        <article class="panel p-6 bg-[radial-gradient(circle_at_2px_2px,#ffe9d5_1px,transparent_0)] [background-size:18px_18px]">
+            <div class="flex justify-between items-start gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-full bg-brand-100 text-brand-700 text-xs font-semibold flex items-center justify-center">{{ item.user.name[:1] }}</span>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">{{ item.user.name }}</p>
+                        <p class="text-xs text-gray-500">{{ item.created_at.strftime('%b %d at %I:%M %p') }}</p>
+                    </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-[#eaf1ff] text-[#3b82f6]">Sprint Goal</span>
+            </div>
+
+            <h3 class="text-4xl font-serif text-gray-900 mt-4">{{ item.title }}</h3>
+            <p class="text-sm text-gray-600 mt-2">{{ item.description or 'No description yet.' }}</p>
+
+            <div class="mt-4 rounded-xl border border-gray-200 bg-white p-3 flex items-center gap-3">
+                <span class="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fa-solid fa-code-branch text-xs"></i></span>
+                <div>
+                    <p class="text-sm font-semibold text-gray-800">Core Milestone</p>
+                    <p class="text-xs text-gray-500">Completed on {{ item.date_achieved.strftime('%b %d') }}</p>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-xs text-gray-500">
+                    <span class="px-2 py-1 rounded-full bg-[#fff1e8] text-[#fb7114]">🔥 {{ (item.id % 6) + 1 }}</span>
+                    <span class="px-2 py-1 rounded-full bg-gray-100">👏 {{ (item.id % 4) + 1 }}</span>
+                </div>
+                {% if current_user.id == item.user_id %}
+                <div class="flex items-center gap-3">
+                    <details>
+                        <summary class="list-none cursor-pointer text-xs text-gray-400 hover:text-[#fb7114]">Edit</summary>
+                        <form method="post" action="{{ url_for('main.update_achievement', achievement_id=item.id) }}" class="mt-2 grid gap-2 w-[260px]">
+                            {{ form.csrf_token }}
+                            <input type="text" name="title" value="{{ item.title }}" class="rounded-lg border border-gray-200 px-2 py-1.5 text-xs bg-white">
+                            <input type="date" name="date_achieved" value="{{ item.date_achieved }}" class="rounded-lg border border-gray-200 px-2 py-1.5 text-xs bg-white">
+                            <textarea name="description" class="rounded-lg border border-gray-200 px-2 py-1.5 text-xs bg-white">{{ item.description or '' }}</textarea>
+                            <button class="text-xs bg-gray-900 text-white rounded px-2 py-1.5 w-fit">Save</button>
+                        </form>
+                    </details>
+                    <form method="post" action="{{ url_for('main.delete_achievement', achievement_id=item.id) }}">
+                        {{ form.csrf_token }}
+                        <button class="text-gray-300 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </article>
+        {% else %}
+        <div class="panel p-6 text-gray-500">No achievements posted yet.</div>
+        {% endfor %}
+    </div>
+
+    <aside class="space-y-4">
+        <article class="panel p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-2xl font-bold text-gray-900">Current Streaks</h3>
+                <span class="text-[#f59e0b]"><i class="fa-solid fa-fire"></i></span>
+            </div>
+            <div class="space-y-3">
+                {% for name, count in streak_rows %}
+                <div class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 p-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 text-xs font-semibold flex items-center justify-center">{{ name[:1] }}</span>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">{{ name }}</p>
+                            <p class="text-[11px] text-gray-500">Consistency streak</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-gray-900">{{ count }}</p>
+                        <p class="text-[10px] text-gray-500">DAYS</p>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500">No streak data yet.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="rounded-2xl p-5 text-white bg-gradient-to-br from-[#111827] to-[#1f2937]">
+            <h3 class="text-2xl font-bold">The Slacking Jar</h3>
+            <p class="text-sm text-white/70 mt-2">Current penalty pot is growing. Stay on track or pay up.</p>
+            <p class="mt-5 text-5xl font-bold">${{ '%.0f'|format(jar_total_fines) }}</p>
+            <p class="text-xs text-white/60">total fines</p>
+            <a href="{{ url_for('main.jar') }}" class="mt-4 block w-full text-center h-10 leading-10 rounded-xl bg-white/10 border border-white/20 text-sm font-semibold">View Jar</a>
+        </article>
+    </aside>
 </div>
+
 {% endblock %}

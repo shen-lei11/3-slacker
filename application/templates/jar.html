@@ -1,8 +1,14 @@
 {% extends 'base.html' %}
 {% block title %}Slacking Jar - Trio Accountability Hub{% endblock %}
 {% block header %}
-<header class="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-10 px-8 py-5 flex justify-between items-center">
-    <div><h1 class="text-2xl font-serif text-gray-900">The Accountability Jar</h1></div>
+<header class="bg-white border-b border-gray-100 sticky top-0 z-10 px-8 py-4 flex items-center justify-between">
+    <div>
+        <p class="text-xs text-gray-500">SquadSync Projects / Slacking Jar</p>
+        <h1 class="text-4xl font-serif text-gray-900">The Accountability Jar</h1>
+    </div>
+    <button type="button" class="h-10 w-10 rounded-lg border border-gray-200 text-gray-400 bg-white">
+        <i class="fa-regular fa-bell"></i>
+    </button>
 </header>
 {% endblock %}
 {% block content %}
@@ -14,50 +20,82 @@
             <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.4) 0%,rgba(255,255,255,0.1) 100%);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,0.5);border-radius:20px 20px 40px 40px;overflow:hidden;z-index:10;">
                 <div class="jar-level" style="height: {{ fill_percent }}%;"></div>
                 <div class="coin" style="bottom:10px;left:20px;transform:rotate(15deg)">$1</div>
-                <div class="coin" style="bottom:15px;left:60px;transform:rotate(-20deg)">$5</div>
+                <div class="coin" style="bottom:15px;left:60px;transform:rotate(-20deg)">$1</div>
                 <div class="coin" style="bottom:5px;right:30px;transform:rotate(45deg)">$1</div>
-                <div class="coin" style="bottom:45px;left:40px;transform:rotate(10deg)">$2</div>
+                <div class="coin" style="bottom:45px;left:40px;transform:rotate(10deg)">$1</div>
             </div>
         </div>
     </div>
     <div class="w-full lg:w-1/2 space-y-8">
         <div>
-            <h2 class="text-3xl font-serif text-gray-900 mb-4">Pay Up, Slackers!</h2>
-            <p class="text-gray-500 text-lg">Log accountability fines quickly with a reason, then track totals by person.</p>
-            <div class="mt-6 flex items-center gap-3">
-                <button type="button" onclick="openJarModal()" class="px-6 py-3 bg-brand-500 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 shadow-[0_4px_12px_rgba(251,113,20,0.25)]">
-                    <i class="fa-solid fa-coins"></i> Add Coin ($1)
+            <h2 class="text-5xl font-serif text-gray-900 mb-4">Pay Up, Slackers!</h2>
+            <p class="text-gray-500 text-xl">Missed a deadline? Forgot a standup? Log what is owed here. Actual payments are handled outside this app.</p>
+            <div class="mt-8 flex items-center gap-3">
+                <button type="button" onclick="openJarModal()" class="px-7 py-3.5 text-white text-base font-semibold rounded-xl shadow-[0_8px_22px_rgba(251,113,20,0.26)]" style="background:#fb7114;">
+                    <i class="fa-solid fa-coins"></i> Drop $1
                 </button>
-                <span class="text-xs text-gray-500">Add reason first, then submit to drop coin into the jar.</span>
+                <a href="{{ url_for('main.new_fine') }}" class="px-7 py-3.5 bg-white border border-gray-300 text-gray-700 text-base font-semibold rounded-xl hover:border-[#fb7114] hover:text-[#fb7114] inline-flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Add Fine
+                </a>
             </div>
         </div>
     </div>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="panel p-6"><p class="text-sm text-gray-500">Total Fines Logged</p><h3 class="text-3xl font-bold text-gray-900">${{ '%.2f'|format(total_fines) }}</h3></div>
-    <div class="panel p-6"><p class="text-sm text-gray-500">Total Entries</p><h3 class="text-3xl font-bold text-gray-900">{{ entries|length }}</h3></div>
-    <div class="panel p-6"><p class="text-sm text-gray-500">Top Slacker</p><h3 class="text-xl font-bold text-gray-900">{{ top_user.name if top_user else 'N/A' }}</h3><p class="text-sm text-red-500">Total ${{ '%.2f'|format(top_user.amount) if top_user else '0.00' }}</p></div>
+    <article class="panel p-6">
+        <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center"><i class="fa-solid fa-list"></i></span>
+            <div>
+                <p class="text-sm text-gray-500">Total Fines Logged</p>
+                <h3 class="text-4xl font-bold text-gray-900">${{ '%.2f'|format(total_fines) }}</h3>
+            </div>
+        </div>
+        <div class="mt-4">
+            <div class="h-2 rounded-full bg-gray-200 overflow-hidden">
+                <div class="h-full bg-[#fb7114]" style="width: {{ fill_percent }}%;"></div>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Jar fill level by entry count</p>
+        </div>
+    </article>
+
+    <article class="panel p-6">
+        <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-lg bg-blue-100 text-blue-500 flex items-center justify-center"><i class="fa-solid fa-receipt"></i></span>
+            <div>
+                <p class="text-sm text-gray-500">Fine Entries</p>
+                <h3 class="text-4xl font-bold text-gray-900">{{ total_entries }}</h3>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-4">Tracking only, no in-app payment collection</p>
+    </article>
+
+    <article class="panel p-6">
+        <p class="text-sm text-gray-500">Top Owing Person</p>
+        <div class="flex items-center justify-between mt-1">
+            <div>
+                <h3 class="text-3xl font-bold text-gray-900">{{ top_user.name if top_user else 'N/A' }}</h3>
+                <p class="text-sm text-red-500">Owes ${{ '%.2f'|format(top_user.amount) if top_user else '0.00' }}</p>
+            </div>
+            <span class="w-14 h-14 rounded-full border-2 border-[#ffd6b0] bg-brand-100 text-brand-700 flex items-center justify-center text-lg font-bold">
+                {{ (top_user.name[:1] if top_user else '?') }}
+            </span>
+        </div>
+    </article>
 </div>
 
-<section class="panel p-6">
-    <h3 class="text-lg font-bold text-gray-900 mb-4">Total Per User</h3>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {% for name, total in user_totals %}
-        <div class="rounded-xl border border-gray-200 bg-white p-4">
-            <p class="text-sm text-gray-600">{{ name }}</p>
-            <p class="text-2xl font-bold text-gray-900">${{ '%.2f'|format(total) }}</p>
-        </div>
-        {% else %}
-        <p class="text-sm text-gray-500">No user totals yet.</p>
-        {% endfor %}
-    </div>
-</section>
-
 <div class="panel overflow-hidden">
-    <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+    <div class="p-6 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
         <h3 class="text-xl font-bold text-gray-900">Fines Record</h3>
-        <button type="button" onclick="openJarModal()" class="px-3 py-2 bg-brand-500 text-white text-xs font-medium rounded-lg hover:bg-brand-600">+ Add Coin</button>
+        <form method="get" action="{{ url_for('main.jar') }}" class="flex items-center gap-2">
+            <select name="person" class="h-9 rounded-lg border border-gray-200 bg-white px-3 text-xs text-gray-700">
+                <option value="all" {% if person_filter == 'all' %}selected{% endif %}>All People</option>
+                {% for user in users %}
+                <option value="{{ user.id }}" {% if person_filter == (user.id|string) %}selected{% endif %}>{{ user.name }}</option>
+                {% endfor %}
+            </select>
+            <button class="h-9 px-3 rounded-lg bg-gray-900 text-white text-xs">Apply</button>
+        </form>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-left">
@@ -68,16 +106,16 @@
                     <td class="py-4 px-6 font-medium">{{ entry.target_user.name }}</td>
                     <td class="py-4 px-6">{{ entry.reason }}</td>
                     <td class="py-4 px-6">${{ '%.2f'|format(entry.amount) }}</td>
-                    <td class="py-4 px-6">{{ entry.date_issued.strftime('%Y-%m-%d') }}</td>
+                    <td class="py-4 px-6">{{ entry.date_issued.strftime('%b %d, %Y') }}</td>
                     <td class="py-4 px-6">
                         <div class="flex flex-wrap gap-2 justify-end">
-                            <a href="{{ url_for('main.fine_detail', entry_id=entry.id) }}" class="px-2.5 py-1.5 rounded-lg bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600">
-                                <i class="fa-regular fa-eye"></i> View Details
-                            </a>
+                            {% if current_user.id == entry.issued_by %}
+                            <a href="{{ url_for('main.fine_detail', entry_id=entry.id) }}" class="px-2.5 py-1.5 rounded-lg bg-[#fff1e8] text-[#fb7114] text-xs font-semibold hover:bg-[#ffd6b0]">View</a>
                             <form method="post" action="{{ url_for('main.delete_fine', entry_id=entry.id) }}">
                                 {{ form.csrf_token }}
                                 <button class="px-2.5 py-1.5 rounded-lg border border-red-200 bg-red-50 text-xs font-medium text-red-700 hover:bg-red-100">Delete</button>
                             </form>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -93,7 +131,7 @@
     <div class="absolute inset-0 bg-black/50" onclick="closeJarModal()"></div>
     <div class="absolute inset-x-4 top-10 mx-auto max-w-xl panel z-50 bg-white">
         <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900">Add Coin To Jar</h2>
+            <h2 class="text-lg font-bold text-gray-900">Drop $1 Coin</h2>
             <button type="button" onclick="closeJarModal()" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 hover:text-gray-800">
                 <i class="fa-solid fa-xmark"></i>
             </button>
@@ -103,9 +141,9 @@
             {{ form.user_id(class='w-full rounded-lg border border-gray-200 px-3 py-2') }}
             {{ form.reason(class='w-full rounded-lg border border-gray-200 px-3 py-2', placeholder='Fine reason (required)') }}
             {{ form.amount(type='hidden', value='1') }}
-            <p class="text-xs text-gray-500">Amount is fixed to <span class="font-semibold">$1</span> per coin drop.</p>
+            <p class="text-xs text-gray-500">Amount is fixed to <span class="font-semibold">$1</span> for coin drop.</p>
             <button type="submit" class="w-full py-3 px-6 rounded-xl text-white font-semibold" style="background:#fb7114;">
-                Submit & Drop Coin
+                Submit Fine
             </button>
         </form>
     </div>

@@ -1,111 +1,212 @@
 {% extends 'base.html' %}
 {% block title %}My Board - Trio Accountability Hub{% endblock %}
 {% block header %}
-<header class="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-10 px-8 py-5 flex justify-between items-center">
-    <div>
-        <h1 class="text-2xl font-serif text-gray-900">Scrum Board</h1>
-        <div class="mt-2 flex items-center gap-2 bg-surface-100 p-1 rounded-lg border border-gray-200 w-fit">
-            <a href="{{ url_for('main.board', owner='mine') }}" class="px-3 py-1.5 text-xs rounded-md {% if owner_filter != 'all' %}bg-white shadow text-brand-600{% else %}text-gray-600{% endif %}">My Tasks</a>
-            <a href="{{ url_for('main.board', owner='all') }}" class="px-3 py-1.5 text-xs rounded-md {% if owner_filter == 'all' %}bg-white shadow text-brand-600{% else %}text-gray-600{% endif %}">All Tasks</a>
+<header class="bg-white border-b border-gray-100 sticky top-0 z-10 px-8 py-4">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="min-w-[240px]">
+            <div class="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                <span>SquadSync Projects</span>
+                <span>/</span>
+                <span>Sprint 24</span>
+            </div>
+            <h1 class="text-3xl font-serif text-gray-900 mt-1">My Board</h1>
         </div>
+
+        <form method="get" action="{{ url_for('main.board') }}" class="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="owner" value="{{ owner_filter }}">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Search tasks..."
+                    class="w-[190px] md:w-[220px] h-10 rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ffd6b0]"
+                >
+            </div>
+
+            <div class="h-10 rounded-lg border border-gray-200 bg-white p-1 flex items-center gap-1">
+                <a href="{{ url_for('main.board', owner='mine', q=search_query, due=due_filter) }}" class="px-3 h-8 rounded-md text-xs font-semibold flex items-center {% if owner_filter != 'all' %}bg-gray-100 text-gray-900{% else %}text-gray-500 hover:text-gray-700{% endif %}">My Tasks</a>
+                <a href="{{ url_for('main.board', owner='all', q=search_query, due=due_filter) }}" class="px-3 h-8 rounded-md text-xs font-semibold flex items-center {% if owner_filter == 'all' %}bg-gray-100 text-gray-900{% else %}text-gray-500 hover:text-gray-700{% endif %}">All Tasks</a>
+            </div>
+
+            <button name="due" value="soon" class="h-10 px-3 rounded-lg border border-gray-200 text-xs font-semibold {% if due_filter == 'soon' %}bg-[#fff1e8] text-[#fb7114] border-[#ffd6b0]{% else %}bg-white text-gray-600{% endif %}">
+                <i class="fa-regular fa-clock"></i> Due Soon
+            </button>
+
+            <a href="{{ url_for('main.jar') }}" class="h-10 px-3 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-700 flex items-center gap-1 hover:text-[#fb7114]">
+                <i class="fa-solid fa-gavel text-[#fb7114]"></i>
+                Add Fine
+            </a>
+            <button type="button" onclick="openTaskModal()" class="h-10 px-4 rounded-lg text-white text-xs font-semibold shadow-[0_8px_22px_rgba(251,113,20,0.26)]" style="background:#fb7114;">
+                <i class="fa-solid fa-plus"></i>
+                New Task
+            </button>
+            <button type="button" class="h-10 w-10 rounded-lg border border-gray-200 text-gray-400 bg-white">
+                <i class="fa-regular fa-bell"></i>
+            </button>
+        </form>
     </div>
-    <button type="button" onclick="openTaskModal()" class="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg shadow-[0_4px_12px_rgba(251,113,20,0.25)] hover:bg-brand-600">+ New Task</button>
 </header>
 {% endblock %}
 {% block content %}
-<section class="rounded-2xl border border-gray-100 bg-white p-4 md:p-6 shadow-card overflow-x-auto">
-<div class="flex gap-4 min-w-max">
-    {% for key, title in [('todo','To Do'), ('doing','Doing'), ('done','Done')] %}
-    <section class="w-[360px] flex flex-col bg-surface-100/70 rounded-xl border border-gray-200 p-3 min-h-[68vh]">
-        <div class="flex items-center justify-between mb-3 px-1">
-            <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold {% if key == 'todo' %}bg-blue-100 text-blue-700{% elif key == 'doing' %}bg-emerald-100 text-emerald-700{% else %}bg-gray-200 text-gray-700{% endif %}">{{ title }}</span>
-                <span class="text-xs text-gray-500">{{ grouped[key]|length }}</span>
+<section class="overflow-x-auto">
+    <div class="flex gap-4 min-w-[1020px]">
+        {% for key, title in [('todo','TO DO'), ('doing','DOING'), ('done','DONE')] %}
+        <section class="flex-1 min-w-[320px] rounded-2xl bg-[#f6f7fb] border border-gray-200 p-3 min-h-[72vh]">
+            <div class="flex items-center justify-between px-1 py-1 mb-2">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-[11px] tracking-wide font-bold text-gray-700">{{ title }}</h3>
+                    <span class="w-5 h-5 rounded-full bg-[#e5e7eb] text-[10px] font-semibold text-gray-600 flex items-center justify-center">{{ grouped[key]|length }}</span>
+                </div>
+                <button type="button" class="text-gray-400 hover:text-gray-700">
+                    <i class="fa-solid fa-ellipsis"></i>
+                </button>
             </div>
-            <button type="button" onclick="openTaskModal('{{ key }}')" class="w-7 h-7 rounded-md bg-white border border-gray-200 text-gray-500 hover:text-brand-600 hover:border-brand-300">
+
+            <button type="button" onclick="openTaskModal('{{ key }}')" class="w-full h-10 rounded-lg border border-dashed border-[#ffc79d] text-[#fb7114] bg-[#fff8f3] text-sm font-medium hover:bg-[#fff1e8] transition-colors">
                 <i class="fa-solid fa-plus text-xs"></i>
+                Add New
             </button>
-        </div>
-        <div class="space-y-3">
-            {% for task in grouped[key] %}
-            <article class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-card transition-shadow">
-                <div class="flex justify-between mb-2 items-start gap-2">
-                    <span class="px-2 py-0.5 rounded text-[11px] font-medium {% if task.priority == 'high' %}bg-red-100 text-red-700{% elif task.priority == 'medium' %}bg-amber-100 text-amber-700{% else %}bg-gray-100 text-gray-600{% endif %}">{{ task.priority|title }}</span>
-                    <form method="post" action="{{ url_for('main.delete_task', task_id=task.id) }}">{{ form.csrf_token }}<button class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash text-xs"></i></button></form>
-                </div>
-                <h4 class="font-semibold text-gray-900 mb-1">{{ task.title }}</h4>
-                <p class="text-sm text-gray-500 mb-3">{{ task.description or 'No description' }}</p>
-                <div class="text-xs text-gray-500 mb-3">#{{ task.id }} • {{ task.user.name }}{% if task.deadline %} • Due {{ task.deadline }}{% endif %}</div>
-                <a href="{{ url_for('main.task_detail', task_id=task.id) }}" class="text-xs text-brand-600 hover:text-brand-700">Open Detail</a>
-                <details class="mt-2">
-                    <summary class="text-xs text-brand-600 cursor-pointer">Edit</summary>
-                    <form method="post" action="{{ url_for('main.update_task', task_id=task.id) }}" class="grid gap-2 mt-2">
-                        {{ form.csrf_token }}
-                        <input type="text" name="title" value="{{ task.title }}" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white text-gray-900">
-                        <textarea name="description" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white text-gray-900">{{ task.description or '' }}</textarea>
-                        <div class="grid grid-cols-2 gap-2">
-                            <select name="status" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white text-gray-900">
-                                <option value="todo" {% if task.status == 'todo' %}selected{% endif %}>To Do</option>
-                                <option value="doing" {% if task.status == 'doing' %}selected{% endif %}>In Progress</option>
-                                <option value="done" {% if task.status == 'done' %}selected{% endif %}>Done</option>
-                            </select>
-                            <select name="priority" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white text-gray-900">
-                                <option value="low" {% if task.priority == 'low' %}selected{% endif %}>Low</option>
-                                <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>Medium</option>
-                                <option value="high" {% if task.priority == 'high' %}selected{% endif %}>High</option>
-                            </select>
+
+            <div class="space-y-3 mt-3">
+                {% for task in grouped[key] %}
+                <article class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold {% if task.priority == 'high' %}bg-[#fff1e8] text-[#fb7114]{% elif task.priority == 'medium' %}bg-amber-50 text-amber-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+                                <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                {{ task.priority|title }}
+                            </span>
+                            <span class="text-[10px] text-[#fb7114] bg-[#fff8f3] px-2 py-0.5 rounded">Task</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="date" name="deadline" value="{{ task.deadline }}" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white text-gray-900">
-                            <select name="user_id" class="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white text-gray-900">
-                                {% for value, label in form.user_id.choices %}
-                                <option value="{{ value }}" {% if task.user_id == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
+                        {% if current_user.id == task.user_id %}
+                        <form method="post" action="{{ url_for('main.delete_task', task_id=task.id) }}">
+                            {{ form.csrf_token }}
+                            <button class="text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <h4 class="font-semibold text-gray-900 text-[17px] leading-snug">{{ task.title }}</h4>
+                    <p class="text-sm text-gray-500 mt-2 min-h-[40px]">{{ task.description or 'No description added yet.' }}</p>
+
+                    <div class="mt-3 text-xs">
+                        {% if task.status == 'done' %}
+                        <p class="text-emerald-600"><i class="fa-solid fa-circle-check text-[10px]"></i> Completed {{ task.updated_at.strftime('%b %d') }}</p>
+                        {% elif task.deadline %}
+                        <p class="text-[#fb7114]"><i class="fa-regular fa-clock text-[10px]"></i> {{ task.deadline.strftime('%b %d') }}</p>
+                        {% else %}
+                        <p class="text-gray-400"><i class="fa-regular fa-clock text-[10px]"></i> No due date</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-[10px] font-semibold flex items-center justify-center">{{ task.user.name[:1] }}</span>
+                            <span class="text-xs text-gray-500">{{ task.user.name }}</span>
                         </div>
-                        <button class="text-xs bg-brand-500 text-white rounded px-2 py-1">Save</button>
-                    </form>
-                </details>
-                <div class="flex gap-2 mt-3">
-                    {% for next_key, label in [('todo','To Do'),('doing','In Progress'),('done','Done')] %}
-                    <form method="post" action="{{ url_for('main.update_task_status', task_id=task.id) }}">
-                        {{ form.csrf_token }}<input type="hidden" name="status" value="{{ next_key }}">
-                        <button class="px-2 py-1 text-[11px] rounded-md border {% if task.status == next_key %}bg-brand-500 text-white border-brand-500{% else %}bg-white text-gray-600 border-gray-200{% endif %}">{{ label }}</button>
-                    </form>
-                    {% endfor %}
-                </div>
-            </article>
-            {% else %}
-            <div class="text-sm text-gray-500 p-4 border border-dashed border-gray-300 rounded-lg bg-white">No tasks in this lane.</div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endfor %}
-</div>
+                        <div class="flex items-center gap-3 text-xs text-gray-400">
+                            {% if current_user.id == task.user_id %}
+                            <a href="{{ url_for('main.task_detail', task_id=task.id) }}" class="hover:text-[#fb7114]"><i class="fa-solid fa-pen"></i></a>
+                            {% for next_key, label in [('todo','To Do'),('doing','Doing'),('done','Done')] %}
+                            {% if task.status != next_key %}
+                            <form method="post" action="{{ url_for('main.update_task_status', task_id=task.id) }}" class="inline-block">
+                                {{ form.csrf_token }}
+                                <input type="hidden" name="status" value="{{ next_key }}">
+                                <button class="hover:text-[#fb7114]" title="Move to {{ label }}"><i class="fa-solid fa-arrow-right"></i></button>
+                            </form>
+                            {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% else %}
+                <div class="rounded-xl border border-dashed border-gray-300 bg-white/60 px-4 py-7 text-sm text-gray-500 text-center">No tasks in this column.</div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    </div>
 </section>
 
-<div id="task-modal" class="hidden fixed inset-0 z-40">
-    <div class="absolute inset-0 bg-black/50" onclick="closeTaskModal()"></div>
-    <div class="absolute inset-x-4 top-16 mx-auto max-w-2xl panel p-6 z-50 bg-white">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-bold text-gray-900">Create Task</h2>
-            <button type="button" onclick="closeTaskModal()" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 hover:text-gray-800">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <form method="post" action="{{ url_for('main.create_task') }}" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {{ form.hidden_tag() }}
-            {{ form.title(id='modal-task-title', class='w-full rounded-lg border border-gray-200 px-3 py-2', placeholder='Task title') }}
-            {{ form.user_id(class='rounded-lg border border-gray-200 px-3 py-2') }}
-            {{ form.description(class='md:col-span-2 w-full rounded-lg border border-gray-200 px-3 py-2', placeholder='Description') }}
-            {{ form.status(id='modal-task-status', class='rounded-lg border border-gray-200 px-3 py-2') }}
-            {{ form.priority(class='rounded-lg border border-gray-200 px-3 py-2') }}
-            {{ form.deadline(class='rounded-lg border border-gray-200 px-3 py-2') }}
-            <div class="md:col-span-2">
-                <button class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600">Create Task</button>
+<div id="task-modal" class="hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-[#101828]/45" onclick="closeTaskModal()"></div>
+    <aside class="absolute right-0 top-0 h-full w-full max-w-3xl bg-white border-l border-gray-200 shadow-2xl overflow-y-auto">
+        <div class="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs text-gray-500">SquadSync Projects / Sprint 24</p>
+                    <h2 class="text-2xl font-serif text-gray-900">Create New Task</h2>
+                </div>
+                <button type="button" onclick="closeTaskModal()" class="w-9 h-9 rounded-lg border border-gray-200 bg-white text-gray-400 hover:text-gray-700">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
-        </form>
-    </div>
+        </div>
+
+        <div class="p-6 md:p-8">
+            <div class="flex items-center justify-between gap-3 flex-wrap mb-6">
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="inline-flex items-center gap-1 rounded-full bg-[#fff1e8] px-2.5 py-1 font-semibold text-[#fb7114]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#fb7114]"></span>
+                        New Priority
+                    </span>
+                    <span class="rounded-full bg-gray-100 px-2.5 py-1 text-gray-600">Planning</span>
+                </div>
+            </div>
+
+            <form method="post" action="{{ url_for('main.create_task') }}" class="space-y-6">
+                {{ form.hidden_tag() }}
+
+                <div>
+                    <label class="text-xs font-bold tracking-wide text-gray-700">TASK TITLE</label>
+                    {{ form.title(id='modal-task-title', class='mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-base text-gray-900', placeholder='Interview & Prototyping for Onboarding Flow') }}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600">Assignee</label>
+                        {{ form.user_id(class='mt-1 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-800 bg-white') }}
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600">Due Date</label>
+                        {{ form.deadline(class='mt-1 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-800 bg-white') }}
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600">Status</label>
+                        {{ form.status(id='modal-task-status', class='mt-1 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-800 bg-white') }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-semibold text-gray-600">Priority</label>
+                    {{ form.priority(class='mt-1 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-800 bg-white md:w-60') }}
+                </div>
+
+                <div class="rounded-xl border border-[#ffd6b0] bg-[#fff8f3] p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="w-7 h-7 rounded-full bg-[#fb7114] text-white flex items-center justify-center text-xs mt-0.5"><i class="fa-solid fa-stopwatch"></i></div>
+                        <div>
+                            <h3 class="font-semibold text-[#c5520d]">Deadline Guidance</h3>
+                            <p class="text-sm text-[#bb622d]">Set a realistic due date. Overdue tasks may trigger Slacking Jar fines.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold tracking-wide text-gray-700">DESCRIPTION</label>
+                    {{ form.description(class='mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-700 min-h-[140px]', placeholder='Add clear context, acceptance criteria, and links...') }}
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 bg-white">Cancel</button>
+                    <button class="px-5 py-2.5 rounded-lg text-white text-sm font-semibold shadow-[0_10px_26px_rgba(251,113,20,0.25)]" style="background:#fb7114;">Create Task</button>
+                </div>
+            </form>
+        </div>
+    </aside>
 </div>
 {% endblock %}
 
@@ -115,6 +216,7 @@ function openTaskModal(defaultStatus) {
     const modal = document.getElementById('task-modal');
     const statusField = document.getElementById('modal-task-status');
     modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
     if (defaultStatus && statusField) {
         statusField.value = defaultStatus;
     }
@@ -123,6 +225,13 @@ function openTaskModal(defaultStatus) {
 function closeTaskModal() {
     const modal = document.getElementById('task-modal');
     modal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
 }
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closeTaskModal();
+    }
+});
 </script>
 {% endblock %}
