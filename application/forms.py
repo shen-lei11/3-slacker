@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import (
     DateField,
+    EmailField,
     FloatField,
     PasswordField,
     SelectField,
@@ -8,13 +9,24 @@ from wtforms import (
     SubmitField,
     TextAreaField,
 )
-from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional
+from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, Optional
 
 
 class LoginForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
     password = PasswordField("Password", validators=[DataRequired(), Length(min=4, max=128)])
     submit = SubmitField("Sign In")
+
+
+class RegisterForm(FlaskForm):
+    name = StringField("Name", validators=[DataRequired(), Length(min=2, max=100)])
+    email = EmailField("Email", validators=[DataRequired(), Email(), Length(max=120)])
+    password = PasswordField("Password", validators=[DataRequired(), Length(min=6, max=128)])
+    confirm_password = PasswordField(
+        "Confirm Password",
+        validators=[DataRequired(), EqualTo("password", message="Passwords must match.")],
+    )
+    submit = SubmitField("Create Account")
 
 
 class TaskForm(FlaskForm):

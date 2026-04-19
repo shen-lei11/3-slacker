@@ -1,7 +1,8 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
-from application.forms import LoginForm
+from application import db
+from application.forms import LoginForm, RegisterForm
 from application.models import User
 
 
@@ -31,6 +32,29 @@ def login():
         flash("Invalid email or password.", "danger")
 
     return render_template("login.html", form=form)
+
+
+@auth_bp.route("/register", methods=["GET", "POST"])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.dashboard"))
+
+    form = RegisterForm()
+    if form.validate_on_submit():
+        email = form.email.data.lower().strip()
+        existing = User.query.filter_by(email=email).first()
+        if existing:
+            flash("That email is already in use. Please sign in.", "danger")
+        else:
+            user = User(name=form.name.data.strip(), email=email)
+            user.set_password(form.password.data)
+            db.session.add(user)
+            db.session.commit()
+            login_user(user)
+            flash("Account created. Welcome to SquadSync.", "success")
+            return redirect(url_for("main.dashboard"))
+
+    return render_template("register.html", form=form)
 
 
 @auth_bp.route("/logout", methods=["POST"])

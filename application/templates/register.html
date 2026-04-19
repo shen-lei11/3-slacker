@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SquadSync</title>
+    <title>Create Account - SquadSync</title>
     <script>
         window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
         tailwind = {
@@ -27,15 +27,6 @@
                                 800: '#9b3410',
                                 900: '#7d2e10',
                             },
-                            surface: {
-                                100: '#f9fafb',
-                                200: '#f3f4f6',
-                                300: '#e5e7eb',
-                            },
-                        },
-                        boxShadow: {
-                            'soft-xl': '0 20px 50px rgba(251, 113, 20, 0.08)',
-                            'inner-glow': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)',
                         },
                     },
                 },
@@ -59,11 +50,11 @@
                 </div>
 
                 <div class="max-w-[330px]">
-                    <h1 class="font-serif text-[50px] leading-[0.98] text-[#0f172a]">
-                        Ready to crush <span class="italic text-brand-500">those goals?</span>
+                    <h1 class="font-serif text-[48px] leading-[0.98] text-[#0f172a]">
+                        Build your <span class="italic text-brand-500">squad</span>
                     </h1>
                     <p class="mt-5 text-[22px] leading-8 text-[#556074]">
-                        Join your friends, track your tasks, and avoid the dreaded Slacking Jar. Accountability has never looked this good.
+                        Create your account and start tracking goals, wins, and accountability with your crew.
                     </p>
                 </div>
 
@@ -76,8 +67,8 @@
 
             <section class="md:w-1/2 p-8 lg:p-10 flex flex-col">
                 <div class="max-w-[360px] w-full mx-auto md:mx-0">
-                    <h2 class="text-[40px] leading-tight font-bold tracking-[-0.02em] text-[#0f172a]">Welcome Back</h2>
-                    <p class="mt-1 text-[15px] text-[#667085]">Sign in to your squad's workspace</p>
+                    <h2 class="text-[38px] leading-tight font-bold tracking-[-0.02em] text-[#0f172a]">Create Account</h2>
+                    <p class="mt-1 text-[15px] text-[#667085]">Set up your account to join SquadSync</p>
 
                     {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
@@ -89,8 +80,13 @@
                     {% endif %}
                     {% endwith %}
 
-                    <form id="login-form" method="post" class="mt-5 space-y-5">
+                    <form id="register-form" method="post" class="mt-5 space-y-4">
                         {{ form.hidden_tag() }}
+
+                        <div>
+                            <label for="name" class="block text-[13px] font-medium text-[#344054] mb-2">Name</label>
+                            {{ form.name(id="name", class="w-full h-11 px-4 rounded-[10px] border border-[#d7dce3] bg-white text-[14px] text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20", placeholder="Your name") }}
+                        </div>
 
                         <div>
                             <label for="email" class="block text-[13px] font-medium text-[#344054] mb-2">Email address</label>
@@ -98,26 +94,23 @@
                         </div>
 
                         <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <label for="password" class="block text-[13px] font-medium text-[#344054]">Password</label>
-                                <a href="#" class="text-[12px] font-medium text-brand-500 hover:text-brand-600">Forgot password?</a>
-                            </div>
-                            <div class="relative">
-                                {{ form.password(id="password", class="w-full h-11 px-4 pr-10 rounded-[10px] border border-[#d7dce3] bg-white text-[14px] text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20", placeholder="Enter your password") }}
-                                <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#98a2b3] hover:text-[#667085]">
-                                    <i class="fa-regular fa-eye" id="eye-icon"></i>
-                                </button>
-                            </div>
+                            <label for="password" class="block text-[13px] font-medium text-[#344054] mb-2">Password</label>
+                            {{ form.password(id="password", class="w-full h-11 px-4 rounded-[10px] border border-[#d7dce3] bg-white text-[14px] text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20", placeholder="At least 6 characters") }}
+                        </div>
+
+                        <div>
+                            <label for="confirm_password" class="block text-[13px] font-medium text-[#344054] mb-2">Confirm password</label>
+                            {{ form.confirm_password(id="confirm_password", class="w-full h-11 px-4 rounded-[10px] border border-[#d7dce3] bg-white text-[14px] text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20", placeholder="Re-enter password") }}
                         </div>
 
                         <button type="submit" class="w-full h-11 rounded-[10px] bg-[#fb7114] hover:bg-[#eb5809] text-white text-[16px] leading-none font-bold shadow-[0_6px_16px_rgba(251,113,20,0.35)] transition-colors">
-                            Sign In
+                            Create Account
                         </button>
                     </form>
 
                     <p class="mt-6 text-center text-[12px] text-[#5f6b7d]">
-                        Don't have a squad yet?
-                        <a href="{{ url_for('auth.register') }}" class="text-brand-500 font-medium hover:text-brand-600">Create one</a>
+                        Already have an account?
+                        <a href="{{ url_for('auth.login') }}" class="text-brand-500 font-medium hover:text-brand-600">Sign in</a>
                     </p>
                 </div>
 
@@ -127,19 +120,5 @@
             </section>
         </div>
     </main>
-
-    <script>
-    function togglePassword() {
-        const field = document.getElementById('password');
-        const icon = document.getElementById('eye-icon');
-        if (field.type === 'password') {
-            field.type = 'text';
-            icon.className = 'fa-regular fa-eye-slash';
-        } else {
-            field.type = 'password';
-            icon.className = 'fa-regular fa-eye';
-        }
-    }
-    </script>
 </body>
 </html>
