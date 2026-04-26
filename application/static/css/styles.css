@@ -61,6 +61,96 @@ body { margin: 0; padding: 0; background-color: #f8fafc; overflow-x: hidden; }
   transition: height 0.5s ease;
 }
 .animating-coin { animation: dropCoin 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+
+.mobile-nav-scroll {
+  scrollbar-width: none;
+}
+
+.mobile-nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-tab-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  background: #fff;
+}
+
+.mobile-tab-link.active {
+  color: #fb7114;
+  border-color: #ffd6b0;
+  background: #fff8f1;
+}
+
+.mobile-bottom-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 44px;
+  border-radius: 0.75rem;
+  color: #6b7280;
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.mobile-bottom-link i {
+  font-size: 0.9rem;
+}
+
+.mobile-bottom-link.active {
+  color: #fb7114;
+  background: #fff8f1;
+}
+
+.horizontal-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+  header.sticky {
+    position: static;
+  }
+
+  header[class*="px-8"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  form[class*="items-center"] {
+    width: 100%;
+  }
+
+  input.w-64,
+  [class*="w-[190px]"],
+  [class*="w-[220px]"],
+  [class*="w-[260px]"],
+  [class*="w-[360px]"] {
+    width: 100% !important;
+    max-width: 100%;
+  }
+
+  .panel {
+    border-radius: 1rem;
+  }
+
+  .coin {
+    width: 34px;
+    height: 34px;
+    font-size: 12px;
+  }
+}
+
 @keyframes dropCoin {
   0% { transform: translateY(-300px) rotate(0deg); opacity: 0; }
   20% { opacity: 1; }
