@@ -5,7 +5,7 @@ services:
     plan: starter
     region: singapore
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --workers 1 --timeout 120 --access-logfile - --error-logfile -
+    startCommand: mkdir -p /var/data && gunicorn app:app --workers 1 --timeout 120 --access-logfile - --error-logfile -
     healthCheckPath: /healthz
     autoDeploy: true
     disk:
@@ -17,7 +17,7 @@ services:
         value: production
       - key: SECRET_KEY
         generateValue: true
-      - key: DATA_DIR
-        value: /var/data
+      - key: DATABASE_URL
+        value: sqlite:////var/data/trio_hub.db
       - key: PYTHON_VERSION
         value: 3.13.0

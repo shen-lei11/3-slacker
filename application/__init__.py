@@ -1,3 +1,5 @@
+import logging
+
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
@@ -16,6 +18,7 @@ def create_app() -> Flask:
 
     app = Flask(__name__)
     app.config.from_object(Config)
+    logging.getLogger(__name__).info("DB: %s", app.config["SQLALCHEMY_DATABASE_URI"])
 
     db.init_app(app)
     login_manager.init_app(app)
