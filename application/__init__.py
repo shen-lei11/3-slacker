@@ -12,6 +12,8 @@ login_manager.login_message_category = "warning"
 
 
 def create_app() -> Flask:
+    Config.validate()
+
     app = Flask(__name__)
     app.config.from_object(Config)
 
@@ -23,6 +25,10 @@ def create_app() -> Flask:
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+
+    @app.route("/healthz")
+    def healthz():
+        return {"status": "ok"}, 200
 
     with app.app_context():
         from application import models

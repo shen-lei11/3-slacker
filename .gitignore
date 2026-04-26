@@ -4,3 +4,5 @@ __pycache__/
 trio_hub.db
 .env
 reference design/
+.claude/
+plan-*.prompt.md
