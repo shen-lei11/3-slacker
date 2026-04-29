@@ -1,95 +1,42 @@
-from datetime import datetime, date
-
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from application import db, login_manager
+from application import login_manager
+from application.supabase_client import sb
 
 
-class TimestampMixin:
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+class User(UserMixin):
+    def __init__(self, id, name, email, password_hash=None, created_at=None):
+        self.id = int(id)
+        self.name = name
+        self.email = email
+        self.password_hash = password_hash
+        self.created_at = created_at
 
+    def get_id(self) -> str:
+        return str(self.id)
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
-    tasks = db.relationship("Task", backref="user", lazy=True, cascade="all, delete-orphan")
-    focuses = db.relationship(
-        "CurrentFocus", backref="user", lazy=True, cascade="all, delete-orphan"
-    )
-    achievements = db.relationship(
-        "Achievement", backref="user", lazy=True, cascade="all, delete-orphan"
-    )
-    fines = db.relationship(
-        "SlackingJarEntry", foreign_keys="SlackingJarEntry.user_id", backref="target_user", lazy=True
-    )
-
-    def set_password(self, password: str) -> None:
-        self.password_hash = generate_password_hash(password)
+    @classmethod
+    def from_row(cls, row: dict) -> "User":
+        return cls(
+            id=row["id"],
+            name=row.get("name"),
+            email=row.get("email"),
+            password_hash=row.get("password_hash"),
+            created_at=row.get("created_at"),
+        )
 
     def check_password(self, password: str) -> bool:
-        return check_password_hash(self.password_hash, password)
+        return check_password_hash(self.password_hash or "", password)
+
+    @staticmethod
+    def hash_password(password: str) -> str:
+        return generate_password_hash(password)
 
 
 @login_manager.user_loader
 def load_user(user_id: str):
-    return db.session.get(User, int(user_id))
-
-
-class Task(TimestampMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(140), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    status = db.Column(db.String(20), nullable=False, default="todo")
-    priority = db.Column(db.String(20), nullable=False, default="medium")
-    deadline = db.Column(db.Date, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-
-
-class CurrentFocus(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    title = db.Column(db.String(140), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    status_note = db.Column(db.String(160), nullable=True)
-    target_date = db.Column(db.Date, nullable=True)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
-class BacklogItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(140), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    category = db.Column(db.String(40), nullable=False, default="shared")
-    created_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
-    creator = db.relationship("User", foreign_keys=[created_by])
-
-
-class Achievement(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(140), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    date_achieved = db.Column(db.Date, default=date.today, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
-
-class SlackingJarEntry(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    reason = db.Column(db.String(200), nullable=False)
-    amount = db.Column(db.Float, nullable=False, default=1.0)
-    is_paid = db.Column(db.Boolean, default=False, nullable=False)
-    issued_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    date_issued = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
-    issuer = db.relationship("User", foreign_keys=[issued_by])
+    res = sb().table("users").select("*").eq("id", int(user_id)).limit(1).execute()
+    if res.data:
+        return User.from_row(res.data[0])
+    return None

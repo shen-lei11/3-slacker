@@ -1,9 +1,9 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
-from application import db
 from application.forms import LoginForm, RegisterForm
 from application.models import User
+from application.supabase_client import sb
 
 
 auth_bp = Blueprint("auth", __name__)
@@ -23,12 +23,15 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data.lower().strip()).first()
-        if user and user.check_password(form.password.data):
-            login_user(user)
-            flash("Welcome back.", "success")
-            next_url = request.args.get("next")
-            return redirect(next_url or url_for("main.dashboard"))
+        email = form.email.data.lower().strip()
+        res = sb().table("users").select("*").eq("email", email).limit(1).execute()
+        if res.data:
+            user = User.from_row(res.data[0])
+            if user.check_password(form.password.data):
+                login_user(user)
+                flash("Welcome back.", "success")
+                next_url = request.args.get("next")
+                return redirect(next_url or url_for("main.dashboard"))
         flash("Invalid email or password.", "danger")
 
     return render_template("login.html", form=form)
@@ -42,14 +45,23 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         email = form.email.data.lower().strip()
-        existing = User.query.filter_by(email=email).first()
-        if existing:
+        existing = sb().table("users").select("id").eq("email", email).limit(1).execute()
+        if existing.data:
             flash("That email is already in use. Please sign in.", "danger")
         else:
-            user = User(name=form.name.data.strip(), email=email)
-            user.set_password(form.password.data)
-            db.session.add(user)
-            db.session.commit()
+            inserted = (
+                sb()
+                .table("users")
+                .insert(
+                    {
+                        "name": form.name.data.strip(),
+                        "email": email,
+                        "password_hash": User.hash_password(form.password.data),
+                    }
+                )
+                .execute()
+            )
+            user = User.from_row(inserted.data[0])
             login_user(user)
             flash("Account created. Welcome to SquadSync.", "success")
             return redirect(url_for("main.dashboard"))

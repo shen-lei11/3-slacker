@@ -6,3 +6,4 @@ trio_hub.db
 reference design/
 .claude/
 plan-*.prompt.md
+.env

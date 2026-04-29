@@ -1,14 +1,8 @@
 import os
 
 
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-_DEFAULT_DB_DIR = os.environ.get("DATA_DIR", _BASE_DIR)
-_DEFAULT_SQLITE_URI = f"sqlite:///{os.path.join(_DEFAULT_DB_DIR, 'trio_hub.db')}"
-
-
 def _is_production() -> bool:
-    env = os.environ.get("FLASK_ENV", "development").lower()
-    return env == "production"
+    return os.environ.get("FLASK_ENV", "development").lower() == "production"
 
 
 class Config:
@@ -17,8 +11,8 @@ class Config:
     TESTING = False
 
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", _DEFAULT_SQLITE_URI)
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+    SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
@@ -28,9 +22,9 @@ class Config:
 
     @staticmethod
     def validate():
+        if not os.environ.get("SUPABASE_URL") or not os.environ.get("SUPABASE_KEY"):
+            raise RuntimeError("SUPABASE_URL and SUPABASE_KEY must be set.")
         if _is_production():
             secret = os.environ.get("SECRET_KEY")
             if not secret or secret == "dev-secret-key-change-me":
-                raise RuntimeError(
-                    "SECRET_KEY must be set to a non-default value in production."
-                )
+                raise RuntimeError("SECRET_KEY must be set to a non-default value in production.")
