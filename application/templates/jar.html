@@ -99,18 +99,18 @@
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-left">
-            <thead><tr class="bg-gray-50/50 text-gray-500 text-sm border-b border-gray-100"><th class="py-4 px-6">Person</th><th class="py-4 px-6">Reason</th><th class="py-4 px-6">Amount</th><th class="py-4 px-6">Date</th><th class="py-4 px-6">Action</th></tr></thead>
+            <thead><tr class="bg-gray-50/50 text-gray-500 text-sm border-b border-gray-100"><th class="py-4 px-6">Person</th><th class="py-4 px-6">Issued By</th><th class="py-4 px-6">Reason</th><th class="py-4 px-6">Amount</th><th class="py-4 px-6">Date</th><th class="py-4 px-6">Action</th></tr></thead>
             <tbody>
                 {% for entry in entries %}
                 <tr class="border-b border-gray-50">
                     <td class="py-4 px-6 font-medium">{{ entry.target_user.name }}</td>
+                    <td class="py-4 px-6">{{ entry.issuer.name }}</td>
                     <td class="py-4 px-6">{{ entry.reason }}</td>
                     <td class="py-4 px-6">${{ '%.2f'|format(entry.amount) }}</td>
                     <td class="py-4 px-6">{{ entry.date_issued.strftime('%b %d, %Y') }}</td>
                     <td class="py-4 px-6">
                         <div class="flex flex-wrap gap-2 justify-end">
                             {% if current_user.id == entry.issued_by %}
-                            <a href="{{ url_for('main.fine_detail', entry_id=entry.id) }}" class="px-2.5 py-1.5 rounded-lg bg-[#fff1e8] text-[#fb7114] text-xs font-semibold hover:bg-[#ffd6b0]">View</a>
                             <form method="post" action="{{ url_for('main.delete_fine', entry_id=entry.id) }}">
                                 {{ form.csrf_token }}
                                 <button class="px-2.5 py-1.5 rounded-lg border border-red-200 bg-red-50 text-xs font-medium text-red-700 hover:bg-red-100">Delete</button>
@@ -120,7 +120,7 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="py-6 px-6 text-gray-500">No fines logged yet.</td></tr>
+                <tr><td colspan="6" class="py-6 px-6 text-gray-500">No fines logged yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

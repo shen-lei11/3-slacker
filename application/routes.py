@@ -190,6 +190,7 @@ def dashboard():
     for u in users:
         focus_by_user[u["id"]] = next((f for f in all_focus if f["user_id"] == u["id"]), None)
 
+    today_label = datetime.now().strftime("%A, %b %d")
     return render_template(
         "dashboard.html",
         active="dashboard",
@@ -204,6 +205,7 @@ def dashboard():
         users=users,
         focus_by_user=focus_by_user,
         focus_items=all_focus,
+        today_label=today_label,
     )
 
 

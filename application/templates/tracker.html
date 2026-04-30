@@ -39,12 +39,7 @@
         {% set pct = 35 + ((item.id * 13) % 58) %}
     {% endif %}
     <section class="panel p-5">
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2 text-xs">
-                <span class="rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-gray-600">{{ 'Design' if loop.index % 2 else 'Backend' }}</span>
-                <span class="rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-gray-600">{{ 'Onboarding' if loop.index % 2 else 'API' }}</span>
-                <span class="rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-[#fb7114]">High Priority</span>
-            </div>
+        <div class="flex items-center justify-end mb-4">
             <button type="button" class="text-gray-300 hover:text-gray-600">
                 <i class="fa-solid fa-arrows-rotate text-xs"></i>
             </button>
